@@ -1,0 +1,23 @@
+name: fiber_foundation_icons
+description: "This package provides adaptive icons that automatically switch between Android and iOS styles based on the current platform. It offers a unified API to display consistent, platform-specific icons with minimal code, improving UI coherence and user experience across devices."
+version: 1.0.0
+
+environment:
+  sdk: ^3.8.1
+
+repository: https://github.com/daf-ep/foundation_icons
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  material_symbols_icons: ^4.2874.0
+  equatable: ^2.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
