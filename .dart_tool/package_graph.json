@@ -5,12 +5,13 @@
   "packages": [
     {
       "name": "fiber_foundation_icons",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": [
         "cupertino_icons",
         "equatable",
         "flutter",
-        "material_symbols_icons"
+        "material_symbols_icons",
+        "vector_math"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -41,6 +42,11 @@
         "test_api",
         "vector_math"
       ]
+    },
+    {
+      "name": "vector_math",
+      "version": "2.2.0",
+      "dependencies": []
     },
     {
       "name": "equatable",
@@ -110,11 +116,6 @@
         "matcher",
         "meta"
       ]
-    },
-    {
-      "name": "vector_math",
-      "version": "2.2.0",
-      "dependencies": []
     },
     {
       "name": "stack_trace",

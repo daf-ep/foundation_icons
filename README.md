@@ -4,7 +4,7 @@
 
 # fiber_foundation_icons
 
-`fiber_firebase_annotation` is a Flutter widget for displaying adaptive icons (Material / Cupertino) with a fully controlled animation system designed for clarity, consistency, and extensibility.
+`fiber_foundation_icons` is a Flutter widget for displaying adaptive icons (Material / Cupertino) with a fully controlled animation system designed for clarity, consistency, and extensibility.
 
 The package provides:
 
