@@ -29,7 +29,7 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../models/platform_scale.dart';
+import '../src/icon_data.dart';
 
 /// Extension that resolves the appropriate scale factor based on the current platform.
 ///

@@ -27,94 +27,66 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-part of 'icons.dart';
+import 'dart:math' as math;
 
-/// {@template icon_controller}
-/// A simple wrapper around Flutter's [AnimationController] designed specifically
-/// for controlling icon animations.
-///
-/// [IconController] provides a clean and restricted API to:
-/// - Trigger animations forward or in reverse.
-/// - Play animations in a "ping-pong" manner (forward then reverse).
-/// - Expose animation lifecycle status and values.
-///
-/// It is typically used in combination with [IconAnimation] to animate icons
-/// declaratively in the UI.
-///
-/// ### Example usage:
-/// ```dart
-/// final controller = IconController(vsync: this, duration: Duration(milliseconds: 300));
-///
-/// controller.forward();
-/// controller.playPingPong();
-/// ```
-/// {@endtemplate}
-class IconController {
-  /// {@macro icon_controller}
-  ///
-  /// Creates an [IconController] with the given [vsync] and [duration].
-  ///
-  /// - [vsync] is required to synchronize the animation with the widget lifecycle.
-  /// - [duration] defines the total time for the animation to complete.
-  IconController({required TickerProvider vsync, required Duration duration})
-    : _controller = AnimationController(vsync: vsync, duration: duration);
+import 'package:flutter/material.dart';
 
-  final AnimationController _controller;
+class Particle extends StatefulWidget {
+  final Widget child;
+  final double size;
+  final Color color;
+  final Animation<double> animation;
 
-  /// Starts the animation in the forward direction.
-  ///
-  /// Returns a [Future] that completes when the animation finishes.
-  Future<void> forward() async {
-    await _controller.forward();
-    _controller.reset();
+  const Particle({super.key, required this.animation, required this.child, required this.size, required this.color});
+
+  @override
+  State<Particle> createState() => _ParticleState();
+}
+
+class _ParticleState extends State<Particle> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late VoidCallback _listener;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+
+    _listener = () => _controller.value = widget.animation.value;
+    widget.animation.addListener(_listener);
   }
 
-  /// Starts the animation in the reverse direction.
-  ///
-  /// Returns a [Future] that completes when the reverse animation finishes.
-  Future<void> reverse() async {
-    await _controller.reverse();
-    _controller.reset();
+  @override
+  void didUpdateWidget(covariant Particle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.animation != widget.animation) {
+      oldWidget.animation.removeListener(_listener);
+      widget.animation.addListener(_listener);
+    }
   }
 
-  /// Plays the animation forward and then automatically reverses it.
-  ///
-  /// This is commonly used for simple "tap" or "toggle" effects.
-  Future<void> playPingPong() async {
-    await _controller.forward();
-    await _controller.reverse();
-    _controller.reset();
+  @override
+  void dispose() {
+    widget.animation.removeListener(_listener);
+    _controller.dispose();
+    super.dispose();
   }
 
-  /// Disposes the internal [AnimationController].
-  ///
-  /// Must be called when no longer needed to release resources.
-  void dispose() => _controller.dispose();
-
-  /// Adds a listener that is called every time the animation’s value changes.
-  void addListener(VoidCallback listener) => _controller.addListener(listener);
-
-  /// Removes a previously added listener.
-  void removeListener(VoidCallback listener) => _controller.removeListener(listener);
-
-  /// Adds a listener that is called every time the animation’s status changes.
-  void addStatusListener(AnimationStatusListener listener) => _controller.addStatusListener(listener);
-
-  /// Removes a previously added status listener.
-  void removeStatusListener(AnimationStatusListener listener) => _controller.removeStatusListener(listener);
-
-  /// Returns `true` if the animation has completed (fully played forward).
-  bool get isCompleted => _controller.status == AnimationStatus.completed;
-
-  /// Returns `true` if the animation is currently playing forward or reversing.
-  bool get isAnimating =>
-      _controller.status == AnimationStatus.forward || _controller.status == AnimationStatus.reverse;
-
-  /// Returns `true` if the animation is fully dismissed (reset to start).
-  bool get isDismissed => _controller.status == AnimationStatus.dismissed;
-
-  /// Returns the current animation progress as a value between 0.0 and 1.0.
-  double get value => _controller.value;
+  @override
+  Widget build(BuildContext context) {
+    return _ParticleAnimation(
+      size: widget.size,
+      controller: _controller,
+      bubblesColor: BubblesColor(
+        dotPrimaryColor: widget.color,
+        dotSecondaryColor: Color.lerp(widget.color, Colors.white, 0.5)!,
+      ),
+      circleColor: CircleColor(start: widget.color, end: Color.lerp(widget.color, Colors.white, 0.8)!),
+      child: widget.child,
+    );
+  }
 }
 
 /// {@template particle_animation}
@@ -207,7 +179,6 @@ class _ParticleAnimationState extends State<_ParticleAnimation> with TickerProvi
         return Stack(
           clipBehavior: Clip.none,
           children: <Widget>[
-            // --- Bubbles layer ---
             Positioned(
               top: (widget.size - (widget.size * 2)) / 2.0,
               left: (widget.size - (widget.size * 2)) / 2.0,
@@ -222,8 +193,6 @@ class _ParticleAnimationState extends State<_ParticleAnimation> with TickerProvi
                 ),
               ),
             ),
-
-            // --- Concentric circles layer ---
             Positioned(
               top: (widget.size - (widget.size * 0.8)) / 2.0,
               left: (widget.size - (widget.size * 0.8)) / 2.0,
@@ -236,8 +205,6 @@ class _ParticleAnimationState extends State<_ParticleAnimation> with TickerProvi
                 ),
               ),
             ),
-
-            // --- Main child with scaling ---
             Container(
               width: widget.size,
               height: widget.size,
@@ -253,11 +220,6 @@ class _ParticleAnimationState extends State<_ParticleAnimation> with TickerProvi
     );
   }
 
-  /// Initializes all the animations that control:
-  /// - outer circle expansion,
-  /// - inner circle expansion,
-  /// - child scaling,
-  /// - bubbles animation.
   void _initControlAnimation() {
     _outerCircleAnimation = Tween<double>(begin: 0.1, end: 1.0).animate(
       CurvedAnimation(
@@ -291,47 +253,11 @@ class _ParticleAnimationState extends State<_ParticleAnimation> with TickerProvi
   }
 }
 
-/// {@template deg_to_rad}
-/// Converts an angle from degrees to radians.
-///
-/// Formula:
-/// ```
-/// radians = degrees * (π / 180)
-/// ```
-///
-/// Commonly used for Flutter animations and custom painters
-/// that require trigonometric functions.
-/// {@endtemplate}
 num _degToRad(num deg) => deg * (math.pi / 180.0);
 
-/// {@template map_value_range}
-/// Maps a [value] from one numeric range into another.
-///
-/// Example:
-/// ```dart
-/// _mapValueFromRangeToRange(5, 0, 10, 0, 100); // → 50
-/// ```
-///
-/// This is useful for scaling animations or converting
-/// values from one coordinate system to another.
-/// {@endtemplate}
 double _mapValueFromRangeToRange(double value, double fromLow, double fromHigh, double toLow, double toHigh) =>
     toLow + ((value - fromLow) / (fromHigh - fromLow) * (toHigh - toLow));
 
-/// {@template clamp}
-/// Restricts a [value] to be within the range `[low, high]`.
-///
-/// - If [value] < [low], returns [low].
-/// - If [value] > [high], returns [high].
-/// - Otherwise, returns [value].
-///
-/// Example:
-/// ```dart
-/// _clamp(15, 0, 10); // → 10
-/// _clamp(-5, 0, 10); // → 0
-/// _clamp(7, 0, 10);  // → 7
-/// ```
-/// {@endtemplate}
 double _clamp(double value, double low, double high) => math.min(math.max(value, low), high);
 
 /// {@template bubbles_color}
@@ -456,11 +382,6 @@ class _CirclePainter extends CustomPainter {
     }
   }
 
-  /// Updates [_circlePaint.color] by interpolating between
-  /// [circleColor.start] and [circleColor.end].
-  ///
-  /// The interpolation starts after 50% of the animation progress
-  /// to create a delayed gradient effect.
   void _updateCircleColor() {
     double colorProgress = _clamp(outerCircleRadiusProgress, 0.5, 1.0);
     colorProgress = _mapValueFromRangeToRange(colorProgress, 0.5, 1.0, 0.0, 1.0);
@@ -502,43 +423,32 @@ class _BubblesPainter extends CustomPainter {
     this.color3 = const Color(0xFFFF5722),
     this.color4 = const Color(0xFFF44336),
   }) {
-    _outerBubblesPositionAngle = 360.0 / 7; // 7 bubbles evenly spaced in a circle
+    _outerBubblesPositionAngle = 360.0 / 7;
     for (int i = 0; i < 4; i++) {
       _circlePaints.add(Paint()..style = PaintingStyle.fill);
     }
   }
 
-  /// The current animation progress between `0.0` and `1.0`.
   final double currentProgress;
-
-  /// Bubble color palette (cycled between 4 colors).
   final Color color1;
   final Color color2;
   final Color color3;
   final Color color4;
 
-  /// Angle step between each outer bubble (7 bubbles → ~51.42° apart).
   double _outerBubblesPositionAngle = 51.42;
 
-  /// Center coordinates (updated in [paint]).
   double _centerX = 0.0;
   double _centerY = 0.0;
 
-  /// Paint objects for rendering bubble fills.
   final List<Paint> _circlePaints = <Paint>[];
 
-  /// Maximum radii for inner and outer bubble rings.
   double _maxOuterDotsRadius = 0.0;
   double _maxInnerDotsRadius = 0.0;
-
-  /// Maximum bubble size.
   double? _maxDotSize;
-
-  /// Animated values for bubble rings.
-  double _currentRadius1 = 0.0; // outer ring radius
-  double? _currentDotSize1 = 0.0; // outer bubble size
-  double? _currentDotSize2 = 0.0; // inner bubble size
-  double _currentRadius2 = 0.0; // inner ring radius
+  double _currentRadius1 = 0.0;
+  double? _currentDotSize1 = 0.0;
+  double? _currentDotSize2 = 0.0;
+  double _currentRadius2 = 0.0;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -548,17 +458,13 @@ class _BubblesPainter extends CustomPainter {
     _maxOuterDotsRadius = size.width * 0.5 - _maxDotSize! * 2;
     _maxInnerDotsRadius = 0.8 * _maxOuterDotsRadius;
 
-    // Update animation states before drawing
     _updateOuterBubblesPosition();
     _updateInnerBubblesPosition();
     _updateBubblesPaints();
-
-    // Draw frames
     _drawOuterBubblesFrame(canvas);
     _drawInnerBubblesFrame(canvas);
   }
 
-  /// Draws the outer ring of bubbles.
   void _drawOuterBubblesFrame(Canvas canvas) {
     final double start = _outerBubblesPositionAngle / 4.0 * 3.0;
     for (int i = 0; i < 7; i++) {
@@ -568,7 +474,6 @@ class _BubblesPainter extends CustomPainter {
     }
   }
 
-  /// Draws the inner ring of bubbles (offset from the outer ring).
   void _drawInnerBubblesFrame(Canvas canvas) {
     final double start = _outerBubblesPositionAngle / 4.0 * 3.0 - _outerBubblesPositionAngle / 2.0;
     for (int i = 0; i < 7; i++) {
@@ -578,8 +483,6 @@ class _BubblesPainter extends CustomPainter {
     }
   }
 
-  /// Updates the radius and size of the **outer bubbles**
-  /// based on [currentProgress].
   void _updateOuterBubblesPosition() {
     if (currentProgress < 0.3) {
       _currentRadius1 = _mapValueFromRangeToRange(currentProgress, 0.0, 0.3, 0.0, _maxOuterDotsRadius * 0.8);
@@ -602,8 +505,6 @@ class _BubblesPainter extends CustomPainter {
     }
   }
 
-  /// Updates the radius and size of the **inner bubbles**
-  /// based on [currentProgress].
   void _updateInnerBubblesPosition() {
     if (currentProgress < 0.3) {
       _currentRadius2 = _mapValueFromRangeToRange(currentProgress, 0.0, 0.3, 0.0, _maxInnerDotsRadius);
@@ -622,12 +523,6 @@ class _BubblesPainter extends CustomPainter {
     }
   }
 
-  /// Updates the bubble colors with smooth interpolation and fading.
-  ///
-  /// - During the first half of the animation, colors transition from:
-  ///   [color1] → [color2], [color2] → [color3], etc.
-  /// - During the second half, the transitions continue cyclically.
-  /// - Alpha decreases as [currentProgress] approaches `1.0`.
   void _updateBubblesPaints() {
     final double progress = _clamp(currentProgress, 0.6, 1.0);
     final int alpha = _mapValueFromRangeToRange(progress, 0.6, 1.0, 255.0, 0.0).toInt();
@@ -657,180 +552,5 @@ class _BubblesPainter extends CustomPainter {
             oldDelegate.color2 != color2 ||
             oldDelegate.color3 != color3 ||
             oldDelegate.color4 != color4);
-  }
-}
-
-/// {@template icon_animation_builder}
-/// A widget that applies an animated transition to an icon based on a provided [IconAnimation].
-///
-/// [_IconAnimationBuilder] handles both simple animations (rotation, zoom, slide)
-/// and icon switching with optional transition effects (fade, scale, rotation).
-///
-/// This widget is typically used to wrap an [Icon] or any widget that needs
-/// animated state transitions driven by an [IconAnimation].
-///
-/// ### Example usage:
-/// ```dart
-/// _IconAnimationBuilder(
-///   animation: IconAnimation.rotate(controller: myController),
-///   child: Icon(Icons.refresh),
-/// );
-/// ```
-/// {@endtemplate}
-class _IconAnimationBuilder extends StatefulWidget {
-  /// {@macro icon_animation_builder}
-  const _IconAnimationBuilder({required this.animation, required this.child, required this.size, required this.color});
-
-  /// The animation configuration that defines the type and behavior of the icon animation.
-  final IconAnimation animation;
-
-  /// The child widget (usually an [Icon]) to which the animation will be applied.
-  final Widget child;
-
-  final double size;
-
-  final Color? color;
-
-  @override
-  State<_IconAnimationBuilder> createState() => __IconAnimationBuilderState();
-}
-
-class __IconAnimationBuilderState extends State<_IconAnimationBuilder> with SingleTickerProviderStateMixin {
-  late final IconController _iconController;
-
-  late final Animation<double> _scaleIn;
-  late final Animation<double> _scaleOut;
-  late final Animation<Offset> _slideUp;
-  late final Animation<Offset> _slideDown;
-  late final Animation<double> _fadeOut;
-
-  bool _showForwardIcon = false;
-
-  AnimationController get _controller => widget.animation.controller?._controller ?? _iconController._controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _iconController =
-        widget.animation.controller ?? IconController(vsync: this, duration: const Duration(milliseconds: 250));
-
-    _scaleIn = Tween<double>(
-      begin: 1.0,
-      end: 2.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    _fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _scaleOut = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInBack));
-
-    _slideUp = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -1),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
-    _slideDown = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, 1),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
-    _controller.addStatusListener(_handleAnimationStatus);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeStatusListener(_handleAnimationStatus);
-    _iconController.dispose();
-    super.dispose();
-  }
-
-  void _handleAnimationStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      if (mounted && widget.animation.switchIcon != null) {
-        setState(() => _showForwardIcon = true);
-      }
-    } else if (status == AnimationStatus.dismissed) {
-      if (mounted && _showForwardIcon) {
-        setState(() => _showForwardIcon = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.animation.type == IconAnimationType.none) {
-      return widget.child;
-    }
-
-    if (widget.animation.type == IconAnimationType.switchTo) {
-      final destIcon = widget.animation.switchIcon!.icon.data.adaptive;
-      final destColor = widget.animation.switchIcon!.color;
-      final destSize = widget.animation.switchIcon!.size;
-      final transition = widget.animation.transition;
-
-      return AnimatedSwitcher(
-        duration: _controller.duration ?? Duration.zero,
-        transitionBuilder: (child, animation) {
-          final rotationTween = child.key == const ValueKey('baseIcon')
-              ? Tween<double>(begin: transition?.rotate?.end ?? 1, end: transition?.rotate?.begin ?? 1)
-              : Tween<double>(begin: transition?.rotate?.begin ?? 1, end: transition?.rotate?.end ?? 1);
-
-          final scaleTween = Tween<double>(begin: transition?.scale?.end ?? 1, end: transition?.scale?.begin ?? 1);
-
-          final rotationAnimation = rotationTween.animate(animation);
-          final scaleAnimation = scaleTween.animate(animation);
-
-          return RotationTransition(
-            turns: rotationAnimation,
-            child: ScaleTransition(scale: scaleAnimation, child: child),
-          );
-        },
-        child: _showForwardIcon
-            ? Icon(destIcon, color: destColor, size: destSize, key: const ValueKey('switchIcon'))
-            : KeyedSubtree(key: const ValueKey('baseIcon'), child: widget.child),
-      );
-    }
-
-    switch (widget.animation.type) {
-      case IconAnimationType.rotate:
-        return RotationTransition(turns: _controller, child: widget.child);
-
-      case IconAnimationType.zoomIn:
-        return FadeTransition(
-          opacity: _fadeOut,
-          child: ScaleTransition(scale: _scaleIn, child: widget.child),
-        );
-
-      case IconAnimationType.zoomOut:
-        return ScaleTransition(scale: _scaleOut, child: widget.child);
-
-      case IconAnimationType.slideOutUp:
-        return FadeTransition(
-          opacity: _fadeOut,
-          child: SlideTransition(position: _slideUp, child: widget.child),
-        );
-
-      case IconAnimationType.slideOutDown:
-        return FadeTransition(
-          opacity: _fadeOut,
-          child: SlideTransition(position: _slideDown, child: widget.child),
-        );
-      case IconAnimationType.particle:
-        final color = widget.color ?? Colors.black;
-
-        return _ParticleAnimation(
-          size: widget.size,
-          controller: widget.animation.controller!._controller,
-          bubblesColor: BubblesColor(dotPrimaryColor: color, dotSecondaryColor: Color.lerp(color, Colors.white, 0.5)!),
-          circleColor: CircleColor(start: color, end: Color.lerp(color, Colors.white, 0.8)!),
-          child: widget.child,
-        );
-
-      default:
-        return widget.child;
-    }
   }
 }

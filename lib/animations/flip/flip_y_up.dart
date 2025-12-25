@@ -27,44 +27,35 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-import 'package:equatable/equatable.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-/// {@template platform_icon}
-/// A platform-adaptive icon definition that provides both Material and Cupertino icons.
-///
-/// [PlatformIcon] allows building cross-platform UIs by specifying
-/// two platform-specific [IconData] objects:
-/// - One for Material (Android/web/desktop)
-/// - One for Cupertino (iOS/macOS)
-///
-/// Consumers can use this model to build adaptive widgets that render
-/// the appropriate icon based on the target platform.
-///
-/// ### Example:
-/// ```dart
-/// final settingsIcon = PlatformIcon(
-///   material: Icons.settings,
-///   cupertino: CupertinoIcons.settings,
-/// );
-///
-/// Icon(Platform.isIOS ? settingsIcon.cupertino : settingsIcon.material);
-/// ```
-/// {@endtemplate}
-class PlatformIcon extends Equatable {
-  /// {@macro platform_icon}
-  ///
-  /// Creates a [PlatformIcon] instance by specifying both [cupertino] and [material] icons.
-  ///
-  /// Both values must be provided to ensure proper behavior on all platforms.
-  const PlatformIcon({required this.cupertino, required this.material});
+class FlipYUp extends AnimatedWidget {
+  final Widget child;
 
-  /// The [IconData] to use on Cupertino (iOS/macOS) platforms.
-  final IconData cupertino;
+  static final Animatable<double> _angle = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween(begin: 0.0, end: -2 * math.pi).chain(CurveTween(curve: Curves.easeInOutCubic)),
+      weight: 100,
+    ),
+  ]);
 
-  /// The [IconData] to use on Material Design (Android/web/desktop) platforms.
-  final IconData material;
+  const FlipYUp({super.key, required Animation<double> animation, required this.child}) : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
 
   @override
-  List<Object> get props => [cupertino, material];
+  Widget build(BuildContext context) {
+    final angle = _angle.evaluate(_animation);
+
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 0.0015)
+        ..rotateX(angle),
+      child: child,
+    );
+  }
 }

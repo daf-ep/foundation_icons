@@ -27,11 +27,35 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-library;
+import 'package:flutter/material.dart';
 
-export './extensions/platform_icon.dart';
-export './extensions/platform_scale.dart';
-export './foundation_icons.dart';
-export './src/animation.dart';
-export './src/icon.dart';
-export './src/icon_data.dart';
+class ZoomIn extends AnimatedWidget {
+  final Widget child;
+
+  static final Animatable<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 20),
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: 2.0).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 40),
+    TweenSequenceItem(tween: Tween(begin: 2.0, end: 1.0).chain(CurveTween(curve: Curves.easeInCubic)), weight: 40),
+  ]);
+
+  static final Animatable<double> _opacity = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 20),
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut)), weight: 30),
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 50),
+  ]);
+
+  const ZoomIn({super.key, required Animation<double> animation, required this.child}) : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = _scale.evaluate(_animation);
+    final opacity = _opacity.evaluate(_animation).clamp(0.0, 1.0);
+
+    return Opacity(
+      opacity: opacity,
+      child: Transform.scale(scale: scale, child: child),
+    );
+  }
+}

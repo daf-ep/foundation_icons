@@ -27,32 +27,26 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-/// {@template platform_scale}
-/// Defines a platform-specific scale factor for sizing UI elements (e.g. icons).
-///
-/// [PlatformScale] helps normalize visual size differences between
-/// Material and Cupertino icons, which often have different default sizing
-/// and visual weight.
-///
-/// This allows you to render icons at consistent perceived sizes across platforms.
-///
-/// ### Example
-/// ```dart
-/// final scale = PlatformScale(cupertino: 1.2, material: 1.0);
-///
-/// final icon = Icon(
-///   platformIcon.material,
-///   size: baseSize * (Platform.isIOS ? scale.cupertino : scale.material),
-/// );
-/// ```
-/// {@endtemplate}
-class PlatformScale {
-  /// {@macro platform_scale}
-  const PlatformScale({required this.cupertino, required this.material});
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-  /// Scale factor applied on Cupertino platforms (iOS/macOS).
-  final double cupertino;
+class FadeIn extends AnimatedWidget {
+  final Widget child;
 
-  /// Scale factor applied on Material platforms (Android/web/desktop).
-  final double material;
+  static final Animatable<double> _opacity = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(0.0), weight: 20),
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 60),
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 20),
+  ]);
+
+  const FadeIn({super.key, required Animation<double> animation, required this.child}) : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final opacity = _opacity.evaluate(_animation).clamp(0.0, 1.0);
+
+    return Opacity(opacity: opacity, child: child);
+  }
 }

@@ -27,11 +27,27 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-library;
+import 'package:flutter/material.dart';
 
-export './extensions/platform_icon.dart';
-export './extensions/platform_scale.dart';
-export './foundation_icons.dart';
-export './src/animation.dart';
-export './src/icon.dart';
-export './src/icon_data.dart';
+class SwingUp extends AnimatedWidget {
+  final Widget child;
+
+  static final Animatable<double> _rotation = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(0.0), weight: 10),
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.28).chain(CurveTween(curve: Curves.easeInOutSine)), weight: 20),
+    TweenSequenceItem(tween: Tween(begin: 0.28, end: -0.25).chain(CurveTween(curve: Curves.easeInOutSine)), weight: 25),
+    TweenSequenceItem(tween: Tween(begin: -0.25, end: 0.12).chain(CurveTween(curve: Curves.easeInOutSine)), weight: 20),
+    TweenSequenceItem(tween: Tween(begin: 0.12, end: 0.0).chain(CurveTween(curve: Curves.easeOutSine)), weight: 25),
+  ]);
+
+  const SwingUp({super.key, required Animation<double> animation, required this.child}) : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final rotation = _rotation.evaluate(_animation);
+
+    return Transform.rotate(alignment: Alignment.topCenter, angle: rotation, child: child);
+  }
+}

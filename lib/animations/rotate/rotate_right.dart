@@ -27,11 +27,24 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-library;
+import 'package:flutter/material.dart';
 
-export './extensions/platform_icon.dart';
-export './extensions/platform_scale.dart';
-export './foundation_icons.dart';
-export './src/animation.dart';
-export './src/icon.dart';
-export './src/icon_data.dart';
+class RotateRight extends AnimatedWidget {
+  final Widget child;
+
+  static final Animatable<double> _rotation = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeInOutCubic)), weight: 100),
+  ]);
+
+  const RotateRight({super.key, required Animation<double> animation, required this.child})
+    : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final turns = _rotation.evaluate(_animation);
+
+    return RotationTransition(turns: AlwaysStoppedAnimation(turns), child: child);
+  }
+}

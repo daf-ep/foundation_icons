@@ -27,11 +27,31 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-library;
+import 'package:flutter/material.dart';
 
-export './extensions/platform_icon.dart';
-export './extensions/platform_scale.dart';
-export './foundation_icons.dart';
-export './src/animation.dart';
-export './src/icon.dart';
-export './src/icon_data.dart';
+class ShakeY extends AnimatedWidget {
+  final Widget child;
+
+  static final Animatable<double> _offsetY = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(0.0), weight: 10),
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: -10.0).chain(CurveTween(curve: Curves.easeInOutCubic)), weight: 18),
+    TweenSequenceItem(
+      tween: Tween(begin: -10.0, end: 10.0).chain(CurveTween(curve: Curves.easeInOutCubic)),
+      weight: 22,
+    ),
+    TweenSequenceItem(tween: Tween(begin: 10.0, end: -6.0).chain(CurveTween(curve: Curves.easeInOutCubic)), weight: 18),
+    TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0).chain(CurveTween(curve: Curves.easeInOutCubic)), weight: 16),
+    TweenSequenceItem(tween: Tween(begin: 6.0, end: 0.0).chain(CurveTween(curve: Curves.easeInOutCubic)), weight: 16),
+  ]);
+
+  const ShakeY({super.key, required Animation<double> animation, required this.child}) : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final dy = _offsetY.evaluate(_animation);
+
+    return Transform.translate(offset: Offset(0, dy), child: child);
+  }
+}

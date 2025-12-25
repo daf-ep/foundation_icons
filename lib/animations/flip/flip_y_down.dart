@@ -27,11 +27,36 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-library;
+import 'dart:math' as math;
 
-export './extensions/platform_icon.dart';
-export './extensions/platform_scale.dart';
-export './foundation_icons.dart';
-export './src/animation.dart';
-export './src/icon.dart';
-export './src/icon_data.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
+class FlipYDown extends AnimatedWidget {
+  final Widget child;
+
+  static final Animatable<double> _angle = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween(begin: 0.0, end: 2 * math.pi).chain(CurveTween(curve: Curves.easeInOutCubic)),
+      weight: 100,
+    ),
+  ]);
+
+  const FlipYDown({super.key, required Animation<double> animation, required this.child})
+    : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final angle = _angle.evaluate(_animation);
+
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 0.0015)
+        ..rotateX(angle),
+      child: child,
+    );
+  }
+}

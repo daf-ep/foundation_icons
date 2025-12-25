@@ -30,7 +30,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../models/platform_icon.dart';
+import '../src/icon_data.dart';
 
 /// {@template platform_icon_extension}
 /// Extension on [PlatformIcon] providing adaptive icon selection

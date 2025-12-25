@@ -27,11 +27,26 @@
 // is a violation of applicable intellectual property laws and will result
 // in legal action.
 
-library;
+import 'package:flutter/material.dart';
 
-export './extensions/platform_icon.dart';
-export './extensions/platform_scale.dart';
-export './foundation_icons.dart';
-export './src/animation.dart';
-export './src/icon.dart';
-export './src/icon_data.dart';
+class Pop extends AnimatedWidget {
+  final Widget child;
+
+  static final Animatable<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 15),
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.25).chain(CurveTween(curve: Curves.easeOutBack)), weight: 30),
+    TweenSequenceItem(tween: Tween(begin: 1.25, end: 0.95).chain(CurveTween(curve: Curves.easeInOut)), weight: 25),
+    TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 30),
+  ]);
+
+  const Pop({super.key, required Animation<double> animation, required this.child}) : super(listenable: animation);
+
+  Animation<double> get _animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = _scale.evaluate(_animation);
+
+    return Transform.scale(scale: scale, child: child);
+  }
+}
